@@ -1,0 +1,408 @@
+{
+  "info": {
+    "name": "CostumeCloset Theatre API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "REST API for CostumeCloset Theatre - Costume hire management system"
+  },
+  "item": [
+    {
+      "name": "Actors",
+      "item": [
+        {
+          "name": "Get All Actors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/actors",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["actors"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get One Actor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/actors/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["actors", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Actor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Smith\",\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/actors",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["actors"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Actor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Smith Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/actors/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["actors", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Actor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/actors/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["actors", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Costumes",
+      "item": [
+        {
+          "name": "Get All Costumes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/costumes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["costumes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Costumes by Era",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/costumes?era=Medieval",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["costumes"],
+              "query": [
+                {
+                  "key": "era",
+                  "value": "Medieval"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get One Costume",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/costumes/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["costumes", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Costume",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Castle Armor\",\n  \"era\": \"Medieval\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/costumes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["costumes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Costume",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Knight Armor\",\n  \"era\": \"Medieval\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/costumes/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["costumes", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Costume",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/costumes/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["costumes", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Hires",
+      "item": [
+        {
+          "name": "Get All Hires (Join)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/hires",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get One Hire",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/hires/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 1: Add Hire (returns 201, status pending)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actor_id\": 1,\n  \"costume_id\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/hires",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Hire",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actor_id\": 1,\n  \"costume_id\": 2\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/hires/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Hire",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/hires/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Status Flow (The Twist)",
+      "item": [
+        {
+          "name": "Test 2: pending → approved (returns 200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/hires/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires", "1", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 3: approved → pending (returns 400 'Invalid status change')",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"pending\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/hires/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires", "1", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "approved → done (returns 200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"done\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/hires/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["hires", "1", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "id": "baseUrl",
+      "name": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}
