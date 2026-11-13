@@ -1,18 +1,24 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
+const path = require('path');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'database.sqlite');
+
 app.use(express.json());
 
-// Database setup
-async function initDB() {
+// ---------------------------------------------------------------------------
+// Database
+// ---------------------------------------------------------------------------
+
+async function initDB(filename = DB_PATH) {
   const db = await open({
-    filename: './database.sqlite',
+    filename,
     driver: sqlite3.Database
   });
 
-  // Create tables
   await db.exec(`
     CREATE TABLE IF NOT EXISTS actors (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,7 +36,7 @@ async function initDB() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       actor_id INTEGER NOT NULL,
       costume_id INTEGER NOT NULL,
-      status TEXT DEFAULT 'pending',
+      status TEXT NOT NULL DEFAULT 'pending',
       FOREIGN KEY (actor_id) REFERENCES actors(id),
       FOREIGN KEY (costume_id) REFERENCES costumes(id)
     );
@@ -39,65 +45,105 @@ async function initDB() {
   return db;
 }
 
-// Middleware to make db available
 let db;
-initDB().then(database => {
-  db = database;
-  console.log('Database initialized');
+
+// Every request needs a ready database. This keeps the API from crashing if a
+// request arrives in the split second before initDB() has finished.
+app.use((req, res, next) => {
+  if (!db) {
+    return res.status(503).json({
+      error: 'Database is still initializing, please try again in a moment.'
+    });
+  }
+  next();
 });
 
-// Validation helper
-function validateCostume(data, isUpdate = false) {
+// ---------------------------------------------------------------------------
+// Validation and status rules
+// ---------------------------------------------------------------------------
+
+const STATUSES = ['pending', 'approved', 'done'];
+const NEXT_STATUS = { pending: 'approved', approved: 'done', done: null };
+
+function isNonEmptyString(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isPositiveInteger(value) {
+  return Number.isInteger(value) && value > 0;
+}
+
+function validateCostume(body) {
   const errors = [];
 
-  if (!data.name || typeof data.name !== 'string' || data.name.trim() === '') {
-    errors.push('Name is required and must be a non-empty string');
+  if (!isNonEmptyString(body.name)) {
+    errors.push('name is required and must be a non-empty string');
   }
 
-  if (!data.era || typeof data.era !== 'string' || data.era.trim() === '') {
-    errors.push('Era is required and must be a non-empty string');
+  if (!isNonEmptyString(body.era)) {
+    errors.push('era is required and must be a non-empty string');
   }
 
   return errors;
 }
 
-function validateActor(data, isUpdate = false) {
+function validateActor(body) {
   const errors = [];
 
-  if (!data.name || typeof data.name !== 'string' || data.name.trim() === '') {
-    errors.push('Name is required and must be a non-empty string');
+  if (!isNonEmptyString(body.name)) {
+    errors.push('name is required and must be a non-empty string');
   }
 
   return errors;
 }
 
-function validateHire(data) {
+function validateHire(body, { partial = false } = {}) {
   const errors = [];
 
-  if (!data.actor_id || typeof data.actor_id !== 'number') {
-    errors.push('Actor ID is required and must be a number');
+  if (!partial || body.actor_id !== undefined) {
+    if (!isPositiveInteger(body.actor_id)) {
+      errors.push('actor_id is required and must be a positive integer');
+    }
   }
 
-  if (!data.costume_id || typeof data.costume_id !== 'number') {
-    errors.push('Costume ID is required and must be a number');
+  if (!partial || body.costume_id !== undefined) {
+    if (!isPositiveInteger(body.costume_id)) {
+      errors.push('costume_id is required and must be a positive integer');
+    }
   }
 
   return errors;
 }
 
-// ============ ACTORS ROUTES ============
+function sendValidationError(res, errors) {
+  return res.status(400).json({ error: errors.join('; ') });
+}
 
-// GET all actors
+const HIRE_SELECT = `
+  SELECT h.id,
+         h.actor_id,
+         h.costume_id,
+         h.status,
+         a.name AS actor_name,
+         c.name AS costume_name
+  FROM hires h
+  JOIN actors a ON a.id = h.actor_id
+  JOIN costumes c ON c.id = h.costume_id
+`;
+
+// ---------------------------------------------------------------------------
+// Actors
+// ---------------------------------------------------------------------------
+
 app.get('/actors', async (req, res) => {
   try {
-    const actors = await db.all('SELECT * FROM actors');
+    const actors = await db.all('SELECT * FROM actors ORDER BY id');
     res.json(actors);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// GET one actor
 app.get('/actors/:id', async (req, res) => {
   try {
     const actor = await db.get('SELECT * FROM actors WHERE id = ?', [req.params.id]);
@@ -110,18 +156,17 @@ app.get('/actors/:id', async (req, res) => {
   }
 });
 
-// POST add actor
 app.post('/actors', async (req, res) => {
   try {
-    const errors = validateActor(req.body);
+    const errors = validateActor(req.body || {});
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors.join('. ') });
+      return sendValidationError(res, errors);
     }
 
     const { name, email } = req.body;
     const result = await db.run(
       'INSERT INTO actors (name, email) VALUES (?, ?)',
-      [name, email || null]
+      [name.trim(), email || null]
     );
 
     const actor = await db.get('SELECT * FROM actors WHERE id = ?', [result.lastID]);
@@ -131,18 +176,17 @@ app.post('/actors', async (req, res) => {
   }
 });
 
-// PUT update actor
 app.put('/actors/:id', async (req, res) => {
   try {
-    const errors = validateActor(req.body);
+    const errors = validateActor(req.body || {});
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors.join('. ') });
+      return sendValidationError(res, errors);
     }
 
     const { name, email } = req.body;
     const result = await db.run(
       'UPDATE actors SET name = ?, email = ? WHERE id = ?',
-      [name, email || null, req.params.id]
+      [name.trim(), email || null, req.params.id]
     );
 
     if (result.changes === 0) {
@@ -156,14 +200,16 @@ app.put('/actors/:id', async (req, res) => {
   }
 });
 
-// DELETE actor
 app.delete('/actors/:id', async (req, res) => {
   try {
-    const result = await db.run('DELETE FROM actors WHERE id = ?', [req.params.id]);
-
-    if (result.changes === 0) {
+    const actor = await db.get('SELECT id FROM actors WHERE id = ?', [req.params.id]);
+    if (!actor) {
       return res.status(404).json({ error: 'Actor not found' });
     }
+
+    // Remove dependent hires so the join endpoint never returns orphan rows.
+    await db.run('DELETE FROM hires WHERE actor_id = ?', [req.params.id]);
+    await db.run('DELETE FROM actors WHERE id = ?', [req.params.id]);
 
     res.status(204).send();
   } catch (error) {
@@ -171,27 +217,35 @@ app.delete('/actors/:id', async (req, res) => {
   }
 });
 
-// ============ COSTUMES ROUTES ============
+// ---------------------------------------------------------------------------
+// Costumes
+// ---------------------------------------------------------------------------
 
-// GET all costumes with optional search by era
+// GET /costumes            -> all costumes
+// GET /costumes?era=...    -> search by era (case-insensitive)
 app.get('/costumes', async (req, res) => {
   try {
     const { era } = req.query;
 
-    let costumes;
-    if (era) {
-      costumes = await db.all('SELECT * FROM costumes WHERE era = ?', [era]);
-    } else {
-      costumes = await db.all('SELECT * FROM costumes');
+    if (era !== undefined) {
+      if (!isNonEmptyString(era)) {
+        return res.status(400).json({ error: 'era must be a non-empty string' });
+      }
+
+      const costumes = await db.all(
+        'SELECT * FROM costumes WHERE LOWER(era) = LOWER(?) ORDER BY id',
+        [era.trim()]
+      );
+      return res.json(costumes);
     }
 
+    const costumes = await db.all('SELECT * FROM costumes ORDER BY id');
     res.json(costumes);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// GET one costume
 app.get('/costumes/:id', async (req, res) => {
   try {
     const costume = await db.get('SELECT * FROM costumes WHERE id = ?', [req.params.id]);
@@ -204,18 +258,17 @@ app.get('/costumes/:id', async (req, res) => {
   }
 });
 
-// POST add costume
 app.post('/costumes', async (req, res) => {
   try {
-    const errors = validateCostume(req.body);
+    const errors = validateCostume(req.body || {});
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors.join('. ') });
+      return sendValidationError(res, errors);
     }
 
     const { name, era } = req.body;
     const result = await db.run(
       'INSERT INTO costumes (name, era) VALUES (?, ?)',
-      [name, era]
+      [name.trim(), era.trim()]
     );
 
     const costume = await db.get('SELECT * FROM costumes WHERE id = ?', [result.lastID]);
@@ -225,18 +278,17 @@ app.post('/costumes', async (req, res) => {
   }
 });
 
-// PUT update costume
 app.put('/costumes/:id', async (req, res) => {
   try {
-    const errors = validateCostume(req.body);
+    const errors = validateCostume(req.body || {});
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors.join('. ') });
+      return sendValidationError(res, errors);
     }
 
     const { name, era } = req.body;
     const result = await db.run(
       'UPDATE costumes SET name = ?, era = ? WHERE id = ?',
-      [name, era, req.params.id]
+      [name.trim(), era.trim(), req.params.id]
     );
 
     if (result.changes === 0) {
@@ -250,14 +302,15 @@ app.put('/costumes/:id', async (req, res) => {
   }
 });
 
-// DELETE costume
 app.delete('/costumes/:id', async (req, res) => {
   try {
-    const result = await db.run('DELETE FROM costumes WHERE id = ?', [req.params.id]);
-
-    if (result.changes === 0) {
+    const costume = await db.get('SELECT id FROM costumes WHERE id = ?', [req.params.id]);
+    if (!costume) {
       return res.status(404).json({ error: 'Costume not found' });
     }
+
+    await db.run('DELETE FROM hires WHERE costume_id = ?', [req.params.id]);
+    await db.run('DELETE FROM costumes WHERE id = ?', [req.params.id]);
 
     res.status(204).send();
   } catch (error) {
@@ -265,118 +318,91 @@ app.delete('/costumes/:id', async (req, res) => {
   }
 });
 
-// ============ HIRSES ROUTES ============
+// ---------------------------------------------------------------------------
+// Hires
+// ---------------------------------------------------------------------------
 
-// GET all hires with joined actor and costume names
+// Join endpoint: every hire with the actor and costume names attached.
 app.get('/hires', async (req, res) => {
   try {
-    const hires = await db.all(`
-      SELECT h.id, h.status, h.actor_id, h.costume_id,
-             a.name AS actor_name, c.name AS costume_name
-      FROM hires h
-      JOIN actors a ON h.actor_id = a.id
-      JOIN costumes c ON h.costume_id = c.id
-    `);
+    const hires = await db.all(`${HIRE_SELECT} ORDER BY h.id`);
     res.json(hires);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// GET one hire
 app.get('/hires/:id', async (req, res) => {
   try {
-    const hire = await db.get(`
-      SELECT h.id, h.status, h.actor_id, h.costume_id,
-             a.name AS actor_name, c.name AS costume_name
-      FROM hires h
-      JOIN actors a ON h.actor_id = a.id
-      JOIN costumes c ON h.costume_id = c.id
-      WHERE h.id = ?
-    `, [req.params.id]);
-
+    const hire = await db.get(`${HIRE_SELECT} WHERE h.id = ?`, [req.params.id]);
     if (!hire) {
       return res.status(404).json({ error: 'Hire not found' });
     }
-
     res.json(hire);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// POST add hire
 app.post('/hires', async (req, res) => {
   try {
-    const errors = validateHire(req.body);
+    const errors = validateHire(req.body || {});
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors.join('. ') });
+      return sendValidationError(res, errors);
     }
 
     const { actor_id, costume_id } = req.body;
 
-    // Check actor exists
     const actor = await db.get('SELECT id FROM actors WHERE id = ?', [actor_id]);
     if (!actor) {
       return res.status(404).json({ error: 'Actor not found' });
     }
 
-    // Check costume exists
     const costume = await db.get('SELECT id FROM costumes WHERE id = ?', [costume_id]);
     if (!costume) {
       return res.status(404).json({ error: 'Costume not found' });
     }
 
+    // New hires always start at pending; a client cannot skip the flow.
     const result = await db.run(
       'INSERT INTO hires (actor_id, costume_id, status) VALUES (?, ?, ?)',
       [actor_id, costume_id, 'pending']
     );
 
-    const hire = await db.get(`
-      SELECT h.id, h.status, h.actor_id, h.costume_id,
-             a.name AS actor_name, c.name AS costume_name
-      FROM hires h
-      JOIN actors a ON h.actor_id = a.id
-      JOIN costumes c ON h.costume_id = c.id
-      WHERE h.id = ?
-    `, [result.lastID]);
-
+    const hire = await db.get(`${HIRE_SELECT} WHERE h.id = ?`, [result.lastID]);
     res.status(201).json(hire);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// PUT update hire
 app.put('/hires/:id', async (req, res) => {
   try {
-    const { actor_id, costume_id } = req.body;
-
-    if (actor_id !== undefined) {
-      const actor = await db.get('SELECT id FROM actors WHERE id = ?', [actor_id]);
-      if (!actor) {
-        return res.status(404).json({ error: 'Actor not found' });
-      }
-    }
-
-    if (costume_id !== undefined) {
-      const costume = await db.get('SELECT id FROM costumes WHERE id = ?', [costume_id]);
-      if (!costume) {
-        return res.status(404).json({ error: 'Costume not found' });
-      }
+    const body = req.body || {};
+    const errors = validateHire(body, { partial: true });
+    if (errors.length > 0) {
+      return sendValidationError(res, errors);
     }
 
     const updates = [];
     const params = [];
 
-    if (actor_id !== undefined) {
+    if (body.actor_id !== undefined) {
+      const actor = await db.get('SELECT id FROM actors WHERE id = ?', [body.actor_id]);
+      if (!actor) {
+        return res.status(404).json({ error: 'Actor not found' });
+      }
       updates.push('actor_id = ?');
-      params.push(actor_id);
+      params.push(body.actor_id);
     }
 
-    if (costume_id !== undefined) {
+    if (body.costume_id !== undefined) {
+      const costume = await db.get('SELECT id FROM costumes WHERE id = ?', [body.costume_id]);
+      if (!costume) {
+        return res.status(404).json({ error: 'Costume not found' });
+      }
       updates.push('costume_id = ?');
-      params.push(costume_id);
+      params.push(body.costume_id);
     }
 
     if (updates.length === 0) {
@@ -384,7 +410,6 @@ app.put('/hires/:id', async (req, res) => {
     }
 
     params.push(req.params.id);
-
     const result = await db.run(
       `UPDATE hires SET ${updates.join(', ')} WHERE id = ?`,
       params
@@ -394,22 +419,13 @@ app.put('/hires/:id', async (req, res) => {
       return res.status(404).json({ error: 'Hire not found' });
     }
 
-    const hire = await db.get(`
-      SELECT h.id, h.status, h.actor_id, h.costume_id,
-             a.name AS actor_name, c.name AS costume_name
-      FROM hires h
-      JOIN actors a ON h.actor_id = a.id
-      JOIN costumes c ON h.costume_id = c.id
-      WHERE h.id = ?
-    `, [req.params.id]);
-
+    const hire = await db.get(`${HIRE_SELECT} WHERE h.id = ?`, [req.params.id]);
     res.json(hire);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// DELETE hire
 app.delete('/hires/:id', async (req, res) => {
   try {
     const result = await db.run('DELETE FROM hires WHERE id = ?', [req.params.id]);
@@ -424,18 +440,20 @@ app.delete('/hires/:id', async (req, res) => {
   }
 });
 
-// PATCH hire status (THE TWIST - status flow)
+// THE TWIST: status may only move one step forward:
+// pending -> approved -> done
 app.patch('/hires/:id/status', async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status } = req.body || {};
 
-    if (!status) {
-      return res.status(400).json({ error: 'Status is required' });
+    if (status === undefined) {
+      return res.status(400).json({ error: 'status is required' });
     }
 
-    const validStatuses = ['pending', 'approved', 'done'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Invalid status value' });
+    if (!STATUSES.includes(status)) {
+      return res.status(400).json({
+        error: `Invalid status value. Allowed values: ${STATUSES.join(', ')}`
+      });
     }
 
     const hire = await db.get('SELECT * FROM hires WHERE id = ?', [req.params.id]);
@@ -443,37 +461,77 @@ app.patch('/hires/:id/status', async (req, res) => {
       return res.status(404).json({ error: 'Hire not found' });
     }
 
-    const currentStatus = hire.status;
-    const validTransitions = {
-      'pending': ['approved'],
-      'approved': ['done'],
-      'done': []
-    };
-
-    if (!validTransitions[currentStatus].includes(status)) {
+    if (NEXT_STATUS[hire.status] !== status) {
       return res.status(400).json({ error: 'Invalid status change' });
     }
 
     await db.run('UPDATE hires SET status = ? WHERE id = ?', [status, req.params.id]);
 
-    const updatedHire = await db.get(`
-      SELECT h.id, h.status, h.actor_id, h.costume_id,
-             a.name AS actor_name, c.name AS costume_name
-      FROM hires h
-      JOIN actors a ON h.actor_id = a.id
-      JOIN costumes c ON h.costume_id = c.id
-      WHERE h.id = ?
-    `, [req.params.id]);
-
+    const updatedHire = await db.get(`${HIRE_SELECT} WHERE h.id = ?`, [req.params.id]);
     res.json(updatedHire);
   } catch (error) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// ---------------------------------------------------------------------------
+// Health, 404 and error handling
+// ---------------------------------------------------------------------------
+
+app.get('/', (req, res) => {
+  res.json({
+    name: 'CostumeCloset Theatre API',
+    endpoints: ['/actors', '/costumes', '/hires', '/hires/:id/status']
+  });
 });
 
-module.exports = app;
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Invalid JSON body' });
+  }
+
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ---------------------------------------------------------------------------
+// Startup
+// ---------------------------------------------------------------------------
+
+async function start(port = PORT, filename = DB_PATH) {
+  db = await initDB(filename);
+
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, '0.0.0.0', () => {
+      const actualPort = server.address().port;
+      console.log(`CostumeCloset API listening on http://localhost:${actualPort}`);
+      resolve(server);
+    });
+
+    server.on('error', reject);
+  });
+}
+
+async function closeDB() {
+  if (db) {
+    await db.close();
+    db = null;
+  }
+}
+
+if (require.main === module) {
+  start().catch((error) => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, initDB, start, closeDB, DB_PATH };

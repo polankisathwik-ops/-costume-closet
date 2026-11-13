@@ -1,43 +1,13 @@
 {
   "info": {
     "name": "CostumeCloset Theatre API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "REST API for CostumeCloset Theatre - Costume hire management system"
+    "description": "Full test collection for the CostumeCloset Theatre API.\n\nRun the whole collection in order with the Collection Runner. The requests create their own test data, verify the three required twist tests (201 pending, 200 approved, 400 Invalid status change), then clean up.\n\nbaseUrl defaults to http://localhost:3000. Start the server with `npm start` before running.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Actors",
+      "name": "1. Setup",
       "item": [
-        {
-          "name": "Get All Actors",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/actors",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["actors"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get One Actor",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/actors/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["actors", "1"]
-            }
-          },
-          "response": []
-        },
         {
           "name": "Add Actor",
           "request": {
@@ -48,114 +18,40 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Smith\",\n  \"email\": \"john@example.com\"\n}"
-            },
             "url": {
-              "raw": "http://localhost:3000/actors",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["actors"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Actor",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Smith Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/actors/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["actors", "1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Actor",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/actors/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["actors", "1"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Costumes",
-      "item": [
-        {
-          "name": "Get All Costumes",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/costumes",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["costumes"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Search Costumes by Era",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/costumes?era=Medieval",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["costumes"],
-              "query": [
-                {
-                  "key": "era",
-                  "value": "Medieval"
-                }
+              "raw": "{{baseUrl}}/actors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actors"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Actor\",\n  \"email\": \"postman.actor@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
-        },
-        {
-          "name": "Get One Costume",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/costumes/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["costumes", "1"]
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.test('returns the new actor', function () { pm.expect(data.name).to.eql('Postman Actor'); });",
+                  "pm.collectionVariables.set('actorId', data.id);"
+                ]
+              }
             }
-          },
-          "response": []
+          ]
         },
         {
           "name": "Add Costume",
@@ -167,19 +63,185 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/costumes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Castle Armor\",\n  \"era\": \"Medieval\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/costumes",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["costumes"]
+              "raw": "{\n  \"name\": \"Postman Gown\",\n  \"era\": \"Renaissance\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.test('returns name and era', function () {\n  pm.expect(data.name).to.eql('Postman Gown');\n  pm.expect(data.era).to.eql('Renaissance');\n});",
+                  "pm.collectionVariables.set('costumeId', data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Second Costume",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/costumes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Armor\",\n  \"era\": \"Medieval\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.collectionVariables.set('secondCostumeId', data.id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Costumes CRUD, validation and search",
+      "item": [
+        {
+          "name": "Get All Costumes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/costumes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('returns an array', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Costumes by Era (case-insensitive)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/costumes?era=renaissance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes"
+              ],
+              "query": [
+                {
+                  "key": "era",
+                  "value": "renaissance"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('every result matches the era', function () {\n  pm.expect(data).to.be.an('array');\n  pm.expect(data.length).to.be.above(0);\n  data.forEach(function (costume) {\n    pm.expect(costume.era.toLowerCase()).to.eql('renaissance');\n  });\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get One Costume",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/costumes/{{costumeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes",
+                "{{costumeId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('returns the requested costume', function () { pm.expect(data.name).to.eql('Postman Gown'); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Costume",
@@ -191,72 +253,43 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/costumes/{{costumeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes",
+                "{{costumeId}}"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Knight Armor\",\n  \"era\": \"Medieval\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/costumes/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["costumes", "1"]
+              "raw": "{\n  \"name\": \"Postman Gown Updated\",\n  \"era\": \"Renaissance\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('name was updated', function () { pm.expect(data.name).to.eql('Postman Gown Updated'); });"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Delete Costume",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/costumes/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["costumes", "1"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Hires",
-      "item": [
-        {
-          "name": "Get All Hires (Join)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/hires",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get One Hire",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/hires/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires", "1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Test 1: Add Hire (returns 201, status pending)",
+          "name": "Add Costume - missing era (validation)",
           "request": {
             "method": "POST",
             "header": [
@@ -265,19 +298,228 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/costumes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"actor_id\": 1,\n  \"costume_id\": 1\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/hires",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires"]
+              "raw": "{\n  \"name\": \"Costume Without Era\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "var data = pm.response.json();",
+                  "pm.test('clear validation message', function () { pm.expect(data.error).to.contain('era is required'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Costume - missing name (validation)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/costumes/{{costumeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes",
+                "{{costumeId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"era\": \"Medieval\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "var data = pm.response.json();",
+                  "pm.test('clear validation message', function () { pm.expect(data.error).to.contain('name is required'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get One Costume - not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/costumes/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes",
+                "999999"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 Not Found', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Hires and join endpoint",
+      "item": [
+        {
+          "name": "Test 1: Add Hire (201, starts pending)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hires",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires"
+              ]
+            },
+            "description": "Required test 1. Saves hireId for the status-flow requests that follow.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actor_id\": {{actorId}},\n  \"costume_id\": {{costumeId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.test('starts as pending', function () { pm.expect(data.status).to.eql('pending'); });",
+                  "pm.test('join returns actor_name', function () { pm.expect(data.actor_name).to.eql('Postman Actor'); });",
+                  "pm.test('join returns costume_name', function () { pm.expect(data.costume_name).to.eql('Postman Gown Updated'); });",
+                  "pm.collectionVariables.set('hireId', data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Hires (join)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hires",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "var hire = data.find(function (row) { return row.id === pm.collectionVariables.get('hireId'); });",
+                  "pm.test('join includes actor and costume names', function () {\n  pm.expect(hire).to.be.an('object');\n  pm.expect(hire.actor_name).to.eql('Postman Actor');\n  pm.expect(hire.costume_name).to.eql('Postman Gown Updated');\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get One Hire",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{hireId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{hireId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('returns the joined hire', function () {\n  pm.expect(data.actor_name).to.eql('Postman Actor');\n  pm.expect(data.costume_name).to.eql('Postman Gown Updated');\n});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Hire",
@@ -289,42 +531,48 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{hireId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{hireId}}"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"actor_id\": 1,\n  \"costume_id\": 2\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/hires/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires", "1"]
+              "raw": "{\n  \"actor_id\": {{actorId}},\n  \"costume_id\": {{secondCostumeId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
-        },
-        {
-          "name": "Delete Hire",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/hires/1",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires", "1"]
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('costume changed and status untouched', function () {\n  pm.expect(data.costume_name).to.eql('Postman Armor');\n  pm.expect(data.status).to.eql('pending');\n});"
+                ]
+              }
             }
-          },
-          "response": []
+          ]
         }
       ]
     },
     {
-      "name": "Status Flow (The Twist)",
+      "name": "4. Status flow (the twist)",
       "item": [
         {
-          "name": "Test 2: pending → approved (returns 200)",
+          "name": "Test 2: pending -> approved (200)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -333,22 +581,44 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{hireId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{hireId}}",
+                "status"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"approved\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/hires/1/status",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires", "1", "status"]
+              "raw": "{\n  \"status\": \"approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('status is now approved', function () { pm.expect(data.status).to.eql('approved'); });"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Test 3: approved → pending (returns 400 'Invalid status change')",
+          "name": "Test 3: approved -> pending (400 \"Invalid status change\")",
           "request": {
             "method": "PATCH",
             "header": [
@@ -357,22 +627,44 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{hireId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{hireId}}",
+                "status"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"pending\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/hires/1/status",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires", "1", "status"]
+              "raw": "{\n  \"status\": \"pending\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "var data = pm.response.json();",
+                  "pm.test('exact error message', function () { pm.expect(data.error).to.eql('Invalid status change'); });"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "approved → done (returns 200)",
+          "name": "approved -> done (200)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -381,28 +673,383 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{hireId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{hireId}}",
+                "status"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"done\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:3000/hires/1/status",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3000",
-              "path": ["hires", "1", "status"]
+              "raw": "{\n  \"status\": \"done\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('status is now done', function () { pm.expect(data.status).to.eql('done'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "done -> approved (400 \"Invalid status change\")",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{hireId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{hireId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "var data = pm.response.json();",
+                  "pm.test('exact error message', function () { pm.expect(data.error).to.eql('Invalid status change'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create second hire (for skip-a-step test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hires",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actor_id\": {{actorId}},\n  \"costume_id\": {{secondCostumeId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.test('starts as pending', function () { pm.expect(data.status).to.eql('pending'); });",
+                  "pm.collectionVariables.set('secondHireId', data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "pending -> done (400 \"Invalid status change\")",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{secondHireId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{secondHireId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"done\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "var data = pm.response.json();",
+                  "pm.test('cannot skip a step', function () { pm.expect(data.error).to.eql('Invalid status change'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "unknown status value (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{secondHireId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{secondHireId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"lost\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "var data = pm.response.json();",
+                  "pm.test('explains allowed values', function () { pm.expect(data.error).to.contain('Invalid status value'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Cleanup",
+      "item": [
+        {
+          "name": "Delete First Hire",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{hireId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{hireId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Second Hire",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hires/{{secondHireId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hires",
+                "{{secondHireId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Costume",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/costumes/{{costumeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes",
+                "{{costumeId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Second Costume",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/costumes/{{secondCostumeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "costumes",
+                "{{secondCostumeId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Actor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actors/{{actorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actors",
+                "{{actorId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
   ],
   "variable": [
     {
-      "id": "baseUrl",
-      "name": "baseUrl",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
     }
   ]
 }

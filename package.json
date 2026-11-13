@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch index.js",
+    "seed": "node seed.js",
+    "test": "node --test"
   },
   "keywords": [
     "costume",
@@ -14,8 +16,11 @@
     "express",
     "sqlite"
   ],
-  "author": "",
+  "author": "Sai Siva Teja - CSE2D Group 8",
   "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "express": "^4.21.0",
     "sqlite": "^5.1.1",
